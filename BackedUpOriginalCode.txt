@@ -1,0 +1,126 @@
+// Canvas context
+var context = document.getElementById('canvas').getContext('2d');
+
+//---------------------------------------------------------------------------
+// Background image
+
+var image = new Image();
+
+image.src = '../resources/canvasTestImage.png';
+
+// image.onload = function() {
+//     context.drawImage(image, 0, 0);
+// }
+
+context.drawImage(image, 0, 0);
+
+//---------------------------------------------------------------------------
+// Animated sprite
+
+var coinImage = new Image();
+coinImage.src = '../resources/coin-sprite.png';
+
+function sprite (options) {
+    var that = {};
+    var frameIndex = 0;
+    var tickCount = 0;
+    var ticksPerFrame = options.ticksPerFrame || 0;
+    var numberOfFrames = options.numberOfFrames || 1;
+    var xPosition = 0;
+    var yPosition = 362;
+    var movingRight = true;
+
+    that.loop = options.loop;
+    that.context = options.context;
+    that.width = options.width;
+    that.height = options.height;
+    that.image = options.image;
+
+    that.render = function () {
+        // Clear the canvas
+        context.clearRect(xPosition, yPosition, that.width, that.height);
+
+        // Draw the Background
+        // context.drawImage(image, 0, 0);
+
+        // Draw the animation
+        that.context.drawImage(
+            that.image,
+            frameIndex * that.width / numberOfFrames,
+            0,
+            that.width / numberOfFrames, 
+            that.height,
+            xPosition,
+            yPosition,
+            that.width / numberOfFrames,
+            that.height
+        );
+    };
+
+    that.update = function () {
+        tickCount += 1;
+
+        if (tickCount > ticksPerFrame) {
+            tickCount = 0;
+
+            // If the current frame index is in range
+            if (frameIndex < numberOfFrames -1) {
+                // Go to the next frame
+                frameIndex += 1;
+            } else if (that.loop) {
+                frameIndex = 0;
+            }
+        }
+
+        // Update movement
+        if (movingRight) {
+            if (xPosition < (1024 - 44)) {
+                xPosition++;
+            } else {
+                movingRight = false;
+                xPosition--;
+            }
+        } else {
+            if (xPosition > 0) {
+                xPosition--;
+            } else {
+                movingRight = true;
+                xPosition++;
+            }
+        }
+        
+    };
+
+    return that;
+}
+
+var coin = sprite({
+    context: canvas.getContext("2d"),
+    width: 440,
+    height: 44,
+    image: coinImage,
+    numberOfFrames: 10,
+    ticksPerFrame: 2,
+    loop: true
+});
+
+function gameLoop () {
+    window.requestAnimationFrame(gameLoop);
+
+    coin.update();
+    coin.render();
+}
+
+// Start the game loop as soon as the sprite sheet is loaded
+coinImage.addEventListener("load", gameLoop);
+
+//-------------------------------------------------------------------------------
+// Mouse Events
+
+canvas.addEventListener("click", function (event) {
+    var canvasRect = canvas.getBoundingClientRect();
+    var mousePositionX = event.clientX - canvasRect.left;
+    var mousePositionY = event.clientY - canvasRect.top;
+
+    alert("Click detected at X: " + mousePositionX + " Y: " + mousePositionY);
+});
